@@ -25,7 +25,7 @@ void LED_GreenToggle(void) {
 }
 
 void LED_Work(void) {
-	if (CTRL_TASK_INSTANCE.errorRet == 0 && ADDRESS_INDEX != 0xFF) {
+	if (CTRL_TASK_INSTANCE.errorRet == 0 ) {
 		LED_Red(RESET);
 		LED_GreenToggle();
 	} else {

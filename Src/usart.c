@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -21,47 +21,8 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
-
-#include "ctrl.h"
-
-uint8_t RS485_Buffer[8];
-uint8_t RS485_Buffer_Index;
-uint8_t RS485_Buffer_Tmp;
-
-void RS485_SendData(unsigned char *data, unsigned char len) {
-	while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8) == GPIO_PIN_SET)
-		;
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-	//HAL_UART_Transmit_DMA(&huart1, data, len);
-
-	HAL_UART_Transmit(&huart1, data, len, 100);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	switch (RS485_Buffer_Index) {
-	case 0:
-		if (RS485_Buffer_Tmp == 0xff)
-			RS485_Buffer[RS485_Buffer_Index++] = 0xff;
-		break;
-	case 7:
-		if (RS485_Buffer_Tmp == 0xee) {
-			RS485_Buffer[7] = 0xee;
-			CTRL_AddTask(RS485_Buffer);
-		}
-		RS485_Buffer_Index = 0;
-		break;
-	default:
-		RS485_Buffer[RS485_Buffer_Index++] = RS485_Buffer_Tmp;
-		break;
-	}
-	HAL_UART_Receive_IT(&huart1, &RS485_Buffer_Tmp, 1);
-}
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *uartHandle) {
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-}
-
+#include "led.h"
+#include "tim.h"
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -102,10 +63,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
   
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**USART1 GPIO Configuration    
-    PA9     ------> USART1_TX
-    PA10     ------> USART1_RX 
+    PA2     ------> USART1_TX
+    PA3     ------> USART1_RX 
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
+    GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -113,7 +74,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* USART1 interrupt Init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
+    HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -133,10 +94,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     __HAL_RCC_USART1_CLK_DISABLE();
   
     /**USART1 GPIO Configuration    
-    PA9     ------> USART1_TX
-    PA10     ------> USART1_RX 
+    PA2     ------> USART1_TX
+    PA3     ------> USART1_RX 
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9|GPIO_PIN_10);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2|GPIO_PIN_3);
 
     /* USART1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART1_IRQn);
@@ -146,8 +107,22 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   }
 } 
 
+uint8_t receiveDate[8] = {0};
 /* USER CODE BEGIN 1 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	static uint8_t i = 0;
+	if(huart->Instance == USART1){
+		uint32_t CNT = 0;
+		CNT = 0;
+		LED_Work();
+		CNT = GetCNT(&htim3);
+		htim3.Instance->CCR1 = (CNT+100);
+		HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_1);
+	}
+	receiveDate[i] = 1;
+	if(i>=7)
+		i = 0;
+}
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

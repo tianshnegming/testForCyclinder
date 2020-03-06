@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -34,15 +34,11 @@ extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
 
-extern uint8_t RS485_Buffer_Tmp;
-
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
-void RS485_SendData(unsigned char *data, unsigned char len);
 
 /* USER CODE END Prototypes */
 

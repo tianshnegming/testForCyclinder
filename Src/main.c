@@ -20,8 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "adc.h"
-#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -96,25 +94,34 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
+  MX_TIM3_Init();
   MX_USART1_UART_Init();
-  MX_ADC_Init();
-  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
 	CTRL_Init();
-	HAL_TIM_Base_Start_IT(&htim1);
-	HAL_UART_Receive_IT(&huart1, &RS485_Buffer_Tmp, 1);
-	HAL_ADC_Start_DMA(&hadc, ADC_VALUES, 8);
+//	HAL_TIM_Base_Start_IT(&htim3);
+	HAL_TIM_OC_Start_IT(&htim3,TIM_CHANNEL_1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	while (ADDRESS_INDEX == 0xFF)
+//	while (ADDRESS_INDEX == 0xFF)
 		;
+//		htim3.Instance->CCR1 = 500;
 	while (1) {
-		CTRL_Work();
+//		CTRL_Work();
+		HAL_Delay(5000);
+//		TIM1->CCR1=160;
+	//	htim3.Instance->CCR1 = 500;
+//		htim1.Init.Period = 80;
+//		HAL_TIM_Base_DeInit(&htim1);
+//		HAL_TIM_Base_Start_IT(&htim1);
+
+//		htim1.Instance->CNT = 0;
+//		HAL_TIM_Base_Stop_IT(&htim1);
+//		HAL_TIM_Base_Start_IT(&htim1);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -134,10 +141,8 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI14|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
-  RCC_OscInitStruct.HSI14CalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL2;
